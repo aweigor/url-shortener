@@ -2,11 +2,13 @@ package main
 
 import (
 	"fmt"
-	"go/url-shortener/internal/heartbeat"
 	"net/http"
+	"url-shortener/configs"
+	"url-shortener/internal/heartbeat"
 )
 
 func main() {
+	conf := configs.LoadConfig()
 	router := http.NewServeMux()
 	heartbeat.NewHeartbeatHandler(router)
 	
