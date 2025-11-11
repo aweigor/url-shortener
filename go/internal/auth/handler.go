@@ -26,7 +26,7 @@ func NewAuthHandler(router *http.ServeMux, deps AuthHandlerDeps) {
 func (handler *AuthHandler) Login() http.HandlerFunc {
 	return func (w http.ResponseWriter, req *http.Request) {
 		fmt.Println("OK")
-		res.Json(w, LoginResponse{ Token: "123" });
+		res.Json(w, LoginResponse{ Token: "123" }, 200);
 	}
 }
 
