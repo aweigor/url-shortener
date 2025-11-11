@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"url-shortener/configs"
+	"url-shortener/internal/auth"
 	"url-shortener/internal/heartbeat"
 )
 
@@ -11,6 +12,9 @@ func main() {
 	conf := configs.LoadConfig()
 	router := http.NewServeMux()
 	heartbeat.NewHeartbeatHandler(router)
+	auth.NewAuthHandler(router, auth.AuthHandlerDeps{
+		Config: conf,
+	})
 	
 	server := http.Server{ Addr: ":8081", Handler: router }
 
