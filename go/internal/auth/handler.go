@@ -1,20 +1,11 @@
 package auth
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"url-shortener/configs"
+	"url-shortener/pkg/req"
 	"url-shortener/pkg/res"
-
-	"github.com/go-playground/validator/v10"
-)
-
-const (
-  ErrEmailNotDefined  = "email is required"
-	ErrPasswordNotDefined  = "password is required"
-	ErrEmailNotValid = "email is invalid"
-	ErrJsonNotValid = "json body parser error"
 )
 
 type AuthHandler struct {
@@ -34,21 +25,13 @@ func NewAuthHandler(router *http.ServeMux, deps AuthHandlerDeps) {
 }
 
 func (handler *AuthHandler) Login() http.HandlerFunc {
-	return func (w http.ResponseWriter, req *http.Request) {
+	return func (w http.ResponseWriter, r *http.Request) {
 		// read body
-		var payload LoginRequest
-		err := json.NewDecoder(req.Body).Decode(&payload)
+		body, err := req.HandleBody[LoginRequest](&w, r)
 		if err != nil {
-			res.Json(w, ErrJsonNotValid, 400)
 			return
 		}
-		validate := validator.New()
-		err = validate.Struct(payload )
-		if err != nil {
-			res.Json(w, err.Error(), 400)
-			return
-		}
-		fmt.Println(payload)
+		fmt.Println(body)
 		data := LoginResponse{
 			Token: "123",
 		}
@@ -57,7 +40,11 @@ func (handler *AuthHandler) Login() http.HandlerFunc {
 }
 
 func (handler *AuthHandler) Register() http.HandlerFunc {
-	return func (w http.ResponseWriter, req *http.Request) {
-		fmt.Println("OK")
+	return func (w http.ResponseWriter, r *http.Request) {
+		body, err := req.HandleBody[RegisterRequest](&w, r)
+		if err != nil {
+			return
+		}
+		fmt.Println(body)
 	}
 }
