@@ -6,10 +6,13 @@ import (
 	"url-shortener/configs"
 	"url-shortener/internal/auth"
 	"url-shortener/internal/heartbeat"
+	"url-shortener/pkg/db"
 )
 
 func main() {
 	conf := configs.LoadConfig()
+	test := db.NewDb(conf)
+	fmt.Println(test.DB.Statement.Vars...)
 	router := http.NewServeMux()
 	heartbeat.NewHeartbeatHandler(router)
 	auth.NewAuthHandler(router, auth.AuthHandlerDeps{
