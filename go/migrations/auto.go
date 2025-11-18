@@ -2,7 +2,7 @@ package migrations
 
 import (
 	"os"
-	"url-shortener/link"
+	"url-shortener/internal/link"
 
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"

@@ -6,7 +6,7 @@ import (
 	"url-shortener/configs"
 	"url-shortener/internal/auth"
 	"url-shortener/internal/heartbeat"
-	"url-shortener/link"
+	"url-shortener/internal/link"
 	"url-shortener/pkg/db"
 )
 
