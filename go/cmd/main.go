@@ -12,15 +12,21 @@ import (
 
 func main() {
 	conf := configs.LoadConfig()
-	test := db.NewDb(conf)
-	fmt.Println(test.DB.Statement.Vars...)
+	database := db.NewDb(conf)
+
+	
+	
 	router := http.NewServeMux()
 	heartbeat.NewHeartbeatHandler(router)
 	
 	auth.NewAuthHandler(router, auth.AuthHandlerDeps{
 		Config: conf,
 	})
-	link.NewLinkHandler(router, link.LinkHandlerDeps{})
+
+	linkRepository := link.NewLinkRepository(database)
+	link.NewLinkHandler(router, link.LinkHandlerDeps{
+		LinkRepository: linkRepository,
+	})
 	
 	server := http.Server{ Addr: ":8081", Handler: router }
 

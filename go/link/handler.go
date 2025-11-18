@@ -3,17 +3,22 @@ package link
 import (
 	"fmt"
 	"net/http"
+	"url-shortener/pkg/req"
 	"url-shortener/pkg/res"
 )
 
+type LinkHandler struct {
+	LinkRepository *LinkRepository
+}
 
-
-type LinkHandler struct {}
-
-type LinkHandlerDeps struct {}
+type LinkHandlerDeps struct {
+	LinkRepository *LinkRepository
+}
 
 func NewLinkHandler(router *http.ServeMux, deps LinkHandlerDeps) {
-	handler := &LinkHandler{}
+	handler := &LinkHandler{
+		LinkRepository: deps.LinkRepository,
+	}
 	router.HandleFunc("GET /link/{hash}", handler.Get())
 	router.HandleFunc("POST /link", handler.Create())
 	router.HandleFunc("PATCH /link/{id}", handler.Update())
@@ -28,7 +33,17 @@ func (handler *LinkHandler) Get() http.HandlerFunc {
 
 func (handler *LinkHandler) Create() http.HandlerFunc {
 	return func (w http.ResponseWriter, r *http.Request) {
-		res.Json(w, nil, 200);
+		body, err := req.HandleBody[LinkCreateRequest](&w, r)
+		if err != nil {
+			return
+		}
+		link := NewLink(body.Url)
+		createdLink, err := handler.LinkRepository.Create(link)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		res.Json(w, createdLink, 201)
 	}
 }
 	
