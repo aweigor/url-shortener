@@ -13,8 +13,6 @@ import (
 func main() {
 	conf := configs.LoadConfig()
 	database := db.NewDb(conf)
-
-	
 	
 	router := http.NewServeMux()
 	heartbeat.NewHeartbeatHandler(router)
@@ -33,3 +31,4 @@ func main() {
 	fmt.Println("Server is listening on port 8081")
 	server.ListenAndServe()
 }
+``
