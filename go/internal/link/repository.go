@@ -28,8 +28,8 @@ func (repo *LinkRepository) Create(link *Link) (*Link, error) {
 func (repo *LinkRepository) GetByHash(hash string) (*Link, error) {
 	var link Link
 	res := repo.Database.DB.First(&link, "hash = ?", hash)
-	if result.Error != nil {
-		return nil, result.Error
+	if res.Error != nil {
+		return nil, res.Error
 	}
 	return &link, nil
 }

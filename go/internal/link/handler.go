@@ -19,7 +19,7 @@ func NewLinkHandler(router *http.ServeMux, deps LinkHandlerDeps) {
 	handler := &LinkHandler{
 		LinkRepository: deps.LinkRepository,
 	}
-	router.HandleFunc("GET /link/{hash}", handler.Get())
+	router.HandleFunc("GET /link/{hash}", handler.Fetch())
 	router.HandleFunc("POST /link", handler.Create())
 	router.HandleFunc("PATCH /link/{id}", handler.Update())
 	router.HandleFunc("DELETE /link/{id}", handler.Delete())
@@ -44,6 +44,13 @@ func (handler *LinkHandler) Create() http.HandlerFunc {
 			return
 		}
 		link := NewLink(body.Url)
+		for {
+			existedLink, _ := handler.LinkRepository.GetByHash(link.Hash)
+			if existedLink == nil {
+				break
+			}
+			link.GenerateHash()
+		}
 		createdLink, err := handler.LinkRepository.Create(link)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
