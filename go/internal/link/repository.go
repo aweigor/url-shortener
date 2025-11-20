@@ -1,6 +1,10 @@
 package link
 
-import "url-shortener/pkg/db"
+import (
+	"url-shortener/pkg/db"
+
+	"gorm.io/gorm/clause"
+)
 
 
 type LinkRepositoryDeps struct {
@@ -19,6 +23,14 @@ func NewLinkRepository(database *db.Db) *LinkRepository {
 
 func (repo *LinkRepository) Create(link *Link) (*Link, error) {
 	result := repo.Database.DB.Create(link)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return link, nil
+}
+
+func (repo *LinkRepository) Update(link *Link) (*Link, error) {
+	result := repo.Database.DB.Clauses(clause.Returning{}).Updates(link)
 	if result.Error != nil {
 		return nil, result.Error
 	}
