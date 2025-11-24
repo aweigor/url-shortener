@@ -7,6 +7,7 @@ import (
 	"url-shortener/internal/auth"
 	"url-shortener/internal/heartbeat"
 	"url-shortener/pkg/db"
+	"url-shortener/pkg/middleware"
 )
 
 func main() {
@@ -19,7 +20,7 @@ func main() {
 		Config: conf,
 	})
 	
-	server := http.Server{ Addr: ":8081", Handler: router }
+	server := http.Server{ Addr: ":8081", Handler: middleware.Logging(router) }
 
 	fmt.Println("Server is listening on port 8081")
 	server.ListenAndServe()
