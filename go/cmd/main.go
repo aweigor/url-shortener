@@ -27,7 +27,7 @@ func main() {
 		LinkRepository: linkRepository,
 	})
 
-	mwStack := middleware.Chain(middleware.CORS, middleware.IsAuthed, middleware.Logging)
+	mwStack := middleware.Chain(middleware.CORS, middleware.Logging)
 	
 	server := http.Server{ Addr: ":8081", Handler: mwStack(router) }
 
