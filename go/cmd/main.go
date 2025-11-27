@@ -7,6 +7,7 @@ import (
 	"url-shortener/internal/auth"
 	"url-shortener/internal/heartbeat"
 	"url-shortener/internal/link"
+	"url-shortener/internal/user"
 	"url-shortener/pkg/db"
 	"url-shortener/pkg/middleware"
 )
@@ -16,15 +17,22 @@ func main() {
 	database := db.NewDb(conf)
 	
 	router := http.NewServeMux()
-	heartbeat.NewHeartbeatHandler(router)
 	
-	auth.NewAuthHandler(router, auth.AuthHandlerDeps{
-		Config: conf,
-	})
-
+	// Repositories
 	linkRepository := link.NewLinkRepository(database)
+	userRepository := user.NewUserRepository(database)
+
+	// Services
+	authService := auth.NewAuthService(userRepository)
+
+	// Handlers
+	heartbeat.NewHeartbeatHandler(router)
 	link.NewLinkHandler(router, link.LinkHandlerDeps{
 		LinkRepository: linkRepository,
+	})
+	auth.NewAuthHandler(router, auth.AuthHandlerDeps{
+		Config: conf,
+		AuthService: authService,
 	})
 
 	mwStack := middleware.Chain(middleware.CORS, middleware.Logging)
