@@ -1,9 +1,9 @@
 package auth
 
 import (
-	"fmt"
 	"net/http"
 	"url-shortener/configs"
+	"url-shortener/pkg/jwt"
 	"url-shortener/pkg/req"
 	"url-shortener/pkg/res"
 )
@@ -34,9 +34,17 @@ func (handler *AuthHandler) Login() http.HandlerFunc {
 			return
 		}
 		email, err := handler.AuthService.Login(body.Email, body.Password)
-		fmt.Println(email)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		token,err := jwt.NewJWT(handler.Config.Auth.Secret).Create(email)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		data := LoginResponse{
-			Token: "123",
+			Token: token,
 		}
 		res.Json(w, data, 200);
 	}
@@ -48,6 +56,19 @@ func (handler *AuthHandler) Register() http.HandlerFunc {
 		if err != nil {
 			return
 		}
-		handler.AuthService.Register(body.Email, body.Password, body.Name)
+		email, err := handler.AuthService.Register(body.Email, body.Password, body.Name)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		token,err := jwt.NewJWT(handler.Config.Auth.Secret).Create(email)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		data := RegisterResponse{
+			Token: token,
+		}
+		res.Json(w, data, 200);
 	}
 }
