@@ -1,8 +1,10 @@
 package link
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
+	"url-shortener/configs"
 	"url-shortener/pkg/middleware"
 	"url-shortener/pkg/req"
 	"url-shortener/pkg/res"
@@ -16,6 +18,7 @@ type LinkHandler struct {
 
 type LinkHandlerDeps struct {
 	LinkRepository *LinkRepository
+	Config         *configs.Config
 }
 
 func NewLinkHandler(router *http.ServeMux, deps LinkHandlerDeps) {
@@ -24,12 +27,12 @@ func NewLinkHandler(router *http.ServeMux, deps LinkHandlerDeps) {
 	}
 	router.HandleFunc("GET /link/{hash}", handler.Fetch())
 	router.HandleFunc("POST /link", handler.Create())
-	router.Handle("PATCH /link/{id}", middleware.IsAuthed(handler.Update()) )
+	router.Handle("PATCH /link/{id}", middleware.IsAuthed(handler.Update(), deps.Config))
 	router.HandleFunc("DELETE /link/{id}", handler.Delete())
 }
 
 func (handler *LinkHandler) Fetch() http.HandlerFunc {
-	return func (w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		hash := r.PathValue("hash")
 		link, err := handler.LinkRepository.GetByHash(hash)
 		if err != nil {
@@ -41,7 +44,7 @@ func (handler *LinkHandler) Fetch() http.HandlerFunc {
 }
 
 func (handler *LinkHandler) Create() http.HandlerFunc {
-	return func (w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := req.HandleBody[LinkCreateRequest](&w, r)
 		if err != nil {
 			return
@@ -62,9 +65,13 @@ func (handler *LinkHandler) Create() http.HandlerFunc {
 		res.Json(w, createdLink, 201)
 	}
 }
-	
+
 func (handler *LinkHandler) Update() http.HandlerFunc {
-	return func (w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		email, ok := r.Context().Value(middleware.ContextEmailKey).(string)
+		if ok {
+			fmt.Println(email)
+		}
 		body, err := req.HandleBody[LinkUpdateRequest](&w, r)
 		if err != nil {
 			return
@@ -72,13 +79,13 @@ func (handler *LinkHandler) Update() http.HandlerFunc {
 		idString := r.PathValue("id")
 		id, err := strconv.ParseUint(idString, 10, 32)
 		if err != nil {
-			http.Error(w,err.Error(),http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		link, err := handler.LinkRepository.Update(&Link{
-			Model: gorm.Model{ ID: uint(id) },
-			Url: body.Url,
-			Hash: body.Hash,
+			Model: gorm.Model{ID: uint(id)},
+			Url:   body.Url,
+			Hash:  body.Hash,
 		})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -89,16 +96,16 @@ func (handler *LinkHandler) Update() http.HandlerFunc {
 }
 
 func (handler *LinkHandler) Delete() http.HandlerFunc {
-	return func (w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		idString := r.PathValue("id")
 		id, err := strconv.ParseUint(idString, 10, 32)
 		if err != nil {
-			http.Error(w,err.Error(),http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		_, err = handler.LinkRepository.GetById(uint(id))
 		if err != nil {
-			http.Error(w,err.Error(),http.StatusNotFound)
+			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
 

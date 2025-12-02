@@ -20,7 +20,7 @@ type AuthHandlerDeps struct {
 
 func NewAuthHandler(router *http.ServeMux, deps AuthHandlerDeps) {
 	handler := &AuthHandler{
-		Config: deps.Config,
+		Config:      deps.Config,
 		AuthService: deps.AuthService,
 	}
 	router.HandleFunc("POST /auth/login", handler.Login())
@@ -28,7 +28,7 @@ func NewAuthHandler(router *http.ServeMux, deps AuthHandlerDeps) {
 }
 
 func (handler *AuthHandler) Login() http.HandlerFunc {
-	return func (w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := req.HandleBody[LoginRequest](&w, r)
 		if err != nil {
 			return
@@ -38,7 +38,9 @@ func (handler *AuthHandler) Login() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		token,err := jwt.NewJWT(handler.Config.Auth.Secret).Create(email)
+		token, err := jwt.NewJWT(handler.Config.Auth.Secret).Create(jwt.JWTData{
+			Email: email,
+		})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -46,12 +48,12 @@ func (handler *AuthHandler) Login() http.HandlerFunc {
 		data := LoginResponse{
 			Token: token,
 		}
-		res.Json(w, data, 200);
+		res.Json(w, data, 200)
 	}
 }
 
 func (handler *AuthHandler) Register() http.HandlerFunc {
-	return func (w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := req.HandleBody[RegisterRequest](&w, r)
 		if err != nil {
 			return
@@ -61,7 +63,9 @@ func (handler *AuthHandler) Register() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		token,err := jwt.NewJWT(handler.Config.Auth.Secret).Create(email)
+		token, err := jwt.NewJWT(handler.Config.Auth.Secret).Create(jwt.JWTData{
+			Email: email,
+		})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -69,6 +73,6 @@ func (handler *AuthHandler) Register() http.HandlerFunc {
 		data := RegisterResponse{
 			Token: token,
 		}
-		res.Json(w, data, 200);
+		res.Json(w, data, 200)
 	}
 }

@@ -15,9 +15,9 @@ import (
 func main() {
 	conf := configs.LoadConfig()
 	database := db.NewDb(conf)
-	
+
 	router := http.NewServeMux()
-	
+
 	// Repositories
 	linkRepository := link.NewLinkRepository(database)
 	userRepository := user.NewUserRepository(database)
@@ -29,15 +29,16 @@ func main() {
 	heartbeat.NewHeartbeatHandler(router)
 	link.NewLinkHandler(router, link.LinkHandlerDeps{
 		LinkRepository: linkRepository,
+		Config:         conf,
 	})
 	auth.NewAuthHandler(router, auth.AuthHandlerDeps{
-		Config: conf,
+		Config:      conf,
 		AuthService: authService,
 	})
 
 	mwStack := middleware.Chain(middleware.CORS, middleware.Logging)
-	
-	server := http.Server{ Addr: ":8081", Handler: mwStack(router) }
+
+	server := http.Server{Addr: ":8081", Handler: mwStack(router)}
 
 	fmt.Println("Server is listening on port 8081")
 	server.ListenAndServe()
