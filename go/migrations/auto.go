@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"url-shortener/internal/link"
+	"url-shortener/internal/stat"
 	"url-shortener/internal/user"
 
 	"github.com/joho/godotenv"
@@ -12,12 +13,12 @@ import (
 
 func main() {
 	err := godotenv.Load(".env")
-	if (err != nil) {
-		panic(err)
-	}
-	db, err  := gorm.Open(postgres.Open(os.Getenv("DSN")), &gorm.Config{})
 	if err != nil {
 		panic(err)
 	}
-	db.AutoMigrate(&link.Link{}, &user.User{})
+	db, err := gorm.Open(postgres.Open(os.Getenv("DSN")), &gorm.Config{})
+	if err != nil {
+		panic(err)
+	}
+	db.AutoMigrate(&link.Link{}, &user.User{}, &stat.Stat{})
 }
