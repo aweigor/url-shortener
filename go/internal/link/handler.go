@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"url-shortener/configs"
+	"url-shortener/internal/stat"
 	"url-shortener/pkg/middleware"
 	"url-shortener/pkg/req"
 	"url-shortener/pkg/res"
@@ -14,34 +15,25 @@ import (
 
 type LinkHandler struct {
 	LinkRepository *LinkRepository
+	StatRepository *stat.StatRepository
 }
 
 type LinkHandlerDeps struct {
 	LinkRepository *LinkRepository
+	StatRepository *stat.StatRepository
 	Config         *configs.Config
 }
 
 func NewLinkHandler(router *http.ServeMux, deps LinkHandlerDeps) {
 	handler := &LinkHandler{
 		LinkRepository: deps.LinkRepository,
+		StatRepository: deps.StatRepository,
 	}
 	router.HandleFunc("POST /link", handler.Create())
 	router.Handle("PATCH /link/{id}", middleware.IsAuthed(handler.Update(), deps.Config))
 	router.HandleFunc("DELETE /link/{id}", handler.Delete())
 	router.HandleFunc("GET /link/{hash}", handler.Forward())
 	router.HandleFunc("GET /link", handler.GetAll())
-}
-
-func (handler *LinkHandler) Forward() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		hash := r.PathValue("hash")
-		link, err := handler.LinkRepository.GetByHash(hash)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusNotFound)
-			return
-		}
-		http.Redirect(w, r, link.Url, http.StatusTemporaryRedirect)
-	}
 }
 
 func (handler *LinkHandler) Create() http.HandlerFunc {
@@ -116,6 +108,19 @@ func (handler *LinkHandler) Delete() http.HandlerFunc {
 			return
 		}
 		res.Json(w, nil, 200)
+	}
+}
+
+func (handler *LinkHandler) Forward() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		hash := r.PathValue("hash")
+		link, err := handler.LinkRepository.GetByHash(hash)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		handler.StatRepository.AddClick(link.ID)
+		http.Redirect(w, r, link.Url, http.StatusTemporaryRedirect)
 	}
 }
 
