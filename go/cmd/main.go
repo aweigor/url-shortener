@@ -7,9 +7,9 @@ import (
 	"url-shortener/internal/auth"
 	"url-shortener/internal/heartbeat"
 	"url-shortener/internal/link"
-	"url-shortener/internal/stat"
 	"url-shortener/internal/user"
 	"url-shortener/pkg/db"
+	"url-shortener/pkg/event"
 	"url-shortener/pkg/middleware"
 )
 
@@ -18,11 +18,12 @@ func main() {
 	database := db.NewDb(conf)
 
 	router := http.NewServeMux()
+	eventBus := event.NewEventBus()
 
 	// Repositories
 	linkRepository := link.NewLinkRepository(database)
 	userRepository := user.NewUserRepository(database)
-	statRepository := stat.NewStatRepository(database)
+	//statRepository := stat.NewStatRepository(database)
 
 	// Services
 	authService := auth.NewAuthService(userRepository)
@@ -31,7 +32,7 @@ func main() {
 	heartbeat.NewHeartbeatHandler(router)
 	link.NewLinkHandler(router, link.LinkHandlerDeps{
 		LinkRepository: linkRepository,
-		StatRepository: statRepository,
+		EventBus:       eventBus,
 		Config:         conf,
 	})
 	auth.NewAuthHandler(router, auth.AuthHandlerDeps{
