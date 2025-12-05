@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"url-shortener/configs"
-	"url-shortener/internal/stat"
+	"url-shortener/pkg/di"
 	"url-shortener/pkg/middleware"
 	"url-shortener/pkg/req"
 	"url-shortener/pkg/res"
@@ -15,12 +15,12 @@ import (
 
 type LinkHandler struct {
 	LinkRepository *LinkRepository
-	StatRepository *stat.StatRepository
+	StatRepository di.IStatRepository
 }
 
 type LinkHandlerDeps struct {
 	LinkRepository *LinkRepository
-	StatRepository *stat.StatRepository
+	StatRepository di.IStatRepository
 	Config         *configs.Config
 }
 
