@@ -7,6 +7,7 @@ import (
 	"url-shortener/internal/auth"
 	"url-shortener/internal/heartbeat"
 	"url-shortener/internal/link"
+	"url-shortener/internal/stat"
 	"url-shortener/internal/user"
 	"url-shortener/pkg/db"
 	"url-shortener/pkg/event"
@@ -23,11 +24,14 @@ func main() {
 	// Repositories
 	linkRepository := link.NewLinkRepository(database)
 	userRepository := user.NewUserRepository(database)
-	//statRepository := stat.NewStatRepository(database)
+	statRepository := stat.NewStatRepository(database)
 
 	// Services
 	authService := auth.NewAuthService(userRepository)
-
+	statService := stat.NewStatService(&stat.StatServiceDeps{
+		EventBus:       eventBus,
+		StatRepository: statRepository,
+	})
 	// Handlers
 	heartbeat.NewHeartbeatHandler(router)
 	link.NewLinkHandler(router, link.LinkHandlerDeps{
@@ -43,6 +47,8 @@ func main() {
 	mwStack := middleware.Chain(middleware.CORS, middleware.Logging)
 
 	server := http.Server{Addr: ":8081", Handler: mwStack(router)}
+
+	go statService.AddClick()
 
 	fmt.Println("Server is listening on port 8081")
 	server.ListenAndServe()
