@@ -14,7 +14,7 @@ import (
 	"url-shortener/pkg/middleware"
 )
 
-func main() {
+func NewApp() http.Handler {
 	conf := configs.LoadConfig()
 	database := db.NewDb(conf)
 
@@ -48,12 +48,21 @@ func main() {
 		Config:         conf,
 	})
 
-	mwStack := middleware.Chain(middleware.CORS, middleware.Logging)
-
-	server := http.Server{Addr: ":8081", Handler: mwStack(router)}
-
 	go statService.AddClick()
 
+	// Middlewares
+	mwStack := middleware.Chain(middleware.CORS, middleware.Logging)
+
+	return mwStack(router)
+}
+
+func main() {
+
+	app := NewApp()
+
+	server := http.Server{Addr: ":8081", Handler: app}
+
 	fmt.Println("Server is listening on port 8081")
+
 	server.ListenAndServe()
 }
