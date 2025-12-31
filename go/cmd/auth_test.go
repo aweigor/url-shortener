@@ -9,6 +9,7 @@ import (
 	"os"
 	"testing"
 	"url-shortener/internal/auth"
+	"url-shortener/internal/user"
 
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
@@ -27,7 +28,20 @@ func initDB() *gorm.DB {
 	return db
 }
 
+func initData(db *gorm.DB) {
+	// todo: get password hash from existing record
+	db.Create(&user.User{
+		Email:    "test@mail.main",
+		Password: "12345",
+		Name:     "john",
+	})
+}
+
 func TestLoginSuccess(t *testing.T) {
+
+	db := initDB()
+	initData(db)
+
 	ts := httptest.NewServer(NewApp())
 	defer ts.Close()
 
