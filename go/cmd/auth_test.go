@@ -17,7 +17,7 @@ import (
 )
 
 func initDB() *gorm.DB {
-	err := godotenv.Load("cmd/.env")
+	err := godotenv.Load(".env")
 	if err != nil {
 		panic(err)
 	}
@@ -31,10 +31,16 @@ func initDB() *gorm.DB {
 func initData(db *gorm.DB) {
 	// todo: get password hash from existing record
 	db.Create(&user.User{
-		Email:    "test@mail.main",
+		Email:    "test@mail.test",
 		Password: "12345",
 		Name:     "john",
 	})
+}
+
+func cleanData(db *gorm.DB) {
+	db.Unscoped().
+		Where("email = ?", "test@mail.test").
+		Delete(&user.User{})
 }
 
 func TestLoginSuccess(t *testing.T) {
@@ -69,9 +75,13 @@ func TestLoginSuccess(t *testing.T) {
 	if resData.Token == "" {
 		t.Fatal("Token not defined")
 	}
+	cleanData(db)
 }
 
 func TestLoginFail(t *testing.T) {
+	db := initDB()
+	initData(db)
+
 	ts := httptest.NewServer(NewApp())
 	defer ts.Close()
 
@@ -87,4 +97,5 @@ func TestLoginFail(t *testing.T) {
 	if res.StatusCode != 401 {
 		t.Fatalf("Expected %d got %d", 401, res.StatusCode)
 	}
+	cleanData(db)
 }
