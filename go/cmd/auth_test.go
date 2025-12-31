@@ -6,9 +6,26 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"url-shortener/internal/auth"
+
+	"github.com/joho/godotenv"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
+
+func initDB() *gorm.DB {
+	err := godotenv.Load("cmd/.env")
+	if err != nil {
+		panic(err)
+	}
+	db, err := gorm.Open(postgres.Open(os.Getenv("DSN")), &gorm.Config{})
+	if err != nil {
+		panic(err)
+	}
+	return db
+}
 
 func TestLoginSuccess(t *testing.T) {
 	ts := httptest.NewServer(NewApp())
