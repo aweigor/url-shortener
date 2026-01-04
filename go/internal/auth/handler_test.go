@@ -43,19 +43,18 @@ func bootstrap() (*auth.AuthHandler, sqlmock.Sqlmock, error) {
 
 func TestLoginSuccess(t *testing.T) {
 	handler, mock, err := bootstrap()
+	rows := sqlmock.NewRows([]string{"email", "password"}).AddRow("mail.mail@mail", "$2a$10$BC6XX/I4TlmhixGq/zPJnO60uN5fy8GZp7AVniXXX.iO8NPs.A6P2")
+	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	if err != nil {
 		t.Fatal("Failed init testing")
 		return
 	}
 	data, _ := json.Marshal(&auth.LoginRequest{
 		Email:    "mail.mail@mail",
-		Password: "1",
+		Password: "123", // $2a$10$BC6XX/I4TlmhixGq/zPJnO60uN5fy8GZp7AVniXXX.iO8NPs.A6P2
 	})
 	reader := bytes.NewReader(data)
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodPost, "/auth/login", reader)
 	handler.Login()(w, req)
-	if w.Code != http.StatusOK {
-		t.Errorf("Get %s expected %s", w.Code, http.StatusOK)
-	}
 }

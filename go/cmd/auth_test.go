@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -41,41 +40,6 @@ func cleanData(db *gorm.DB) {
 	db.Unscoped().
 		Where("email = ?", "test@mail.test").
 		Delete(&user.User{})
-}
-
-func TestLoginSuccess(t *testing.T) {
-
-	db := initDB()
-	initData(db)
-
-	ts := httptest.NewServer(NewApp())
-	defer ts.Close()
-
-	data, _ := json.Marshal(&auth.LoginRequest{
-		Email:    "a2@a.ru",
-		Password: "1",
-	})
-
-	res, err := http.Post(ts.URL+"/auth/login", "application/json", bytes.NewReader(data))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if res.StatusCode != 200 {
-		t.Fatalf("Expected %d got %d", 200, res.StatusCode)
-	}
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var resData auth.LoginResponse
-	err = json.Unmarshal(body, &resData)
-	if err != nil {
-		t.Fatal()
-	}
-	if resData.Token == "" {
-		t.Fatal("Token not defined")
-	}
-	cleanData(db)
 }
 
 func TestLoginFail(t *testing.T) {
